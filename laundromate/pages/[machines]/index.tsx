@@ -12,7 +12,7 @@ export default function Home() {
     const cardColors = ['bg-info']; // Customize card colors
 
     // Function to render a single card
-    const renderCard = (name:string, color:string, finishTime:Date) => {
+    const renderCard = (id:number, name:string, color:string, finishTime:Date) => {
         // Calculate the time remaining in minutes
         const currentTime = new Date().getTime();
         const finishTimeInMs = new Date(finishTime).getTime();
@@ -63,7 +63,7 @@ export default function Home() {
     for (let i = 0; i < machineList.length; i++) {
         const name = machineList[i].type() + " " + machineList[i].getId().toString();
         const color = new Date() < machineList[i].getTime() ? 'bg-red' : 'bg-grey-200';
-        washerCardElements.push(renderCard(name, color, machineList[i].getTime()))
+        washerCardElements.push(renderCard(i, name, color, machineList[i].getTime()))
     }
 
     return (
@@ -120,6 +120,8 @@ export default function Home() {
     );
 }
 
+
+
 export async function getServerSideProps(ctx: any) {
     const supabase = createPagesServerClient(ctx)
     const {
@@ -127,14 +129,14 @@ export async function getServerSideProps(ctx: any) {
     } = await supabase.auth.getSession()
 
 
-    // if (!session) {
-    //     return {
-    //         redirect: {
-    //             destination: `localhost:3000`,
-    //             permanent: false
-    //         }
-    //     }
-    // }
+    if (!session) {
+        return {
+            redirect: {
+                destination: `localhost:3000`,
+                permanent: false
+            }
+        }
+    }
 
 
 
