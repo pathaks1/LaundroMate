@@ -1,24 +1,20 @@
-import Router from 'next/router';
 import { createClient } from "@supabase/supabase-js";
 import { Auth } from '@supabase/auth-ui-react';
 import { SupabaseClient, createPagesServerClient } from "@supabase/auth-helpers-nextjs";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+import {SignInWithGoogle} from "@/pages/api/signIn";
 
 export default function MainLogin() {
 
   return (
-      <div className="App">
-        <header className="App-header">
-          <Auth
-              supabaseClient={supabase}
-              theme="dark"
-              providers={["google"]}
-          />
-        </header>
-      </div>
-  )
+      <Router>
+          <Routes>
+              <Route path="/" element={<SignInWithGoogle />} />
+              <Route path="/machines"/>
+          </Routes>
+      </Router>
+  );
 }
 
 export async function getServerSideProps(ctx) {
@@ -27,6 +23,7 @@ export async function getServerSideProps(ctx) {
         data: { session },
     } = await supabase.auth.getSession()
 
+    /*
     if (session) {
         return {
             redirect: {
@@ -35,6 +32,8 @@ export async function getServerSideProps(ctx) {
             }
         }
     }
+
+     */
 
     let props = {}
 
