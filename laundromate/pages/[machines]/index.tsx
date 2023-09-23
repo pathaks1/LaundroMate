@@ -1,4 +1,3 @@
-import React, {useState, useEffect} from 'react';
 import {Washer} from "@/pages/api/Washer";
 import {Dryer} from "@/pages/api/Dryer";
 import {Machine} from "@/pages/api/Machine";
@@ -10,8 +9,7 @@ export default function Home() {
 
     // Define the number of cards, card names, and card colors
     const numberOfCards = 9; // Change this to the desired number of cards
-    const cardColors = ['bg-primary']; // Customize card colors
-    const [washerCardElements, setWasherCardElements] = useState([]);
+    const cardColors = ['bg-info']; // Customize card colors
 
     // Function to render a single card
     const renderCard = (name:string, color:string, finishTime:Date) => {
@@ -49,79 +47,76 @@ export default function Home() {
         );
     };
 
-
-    useEffect(() => {
-        // Create an array of card elements
-        const machineList = [];
-        const numWashers = 9;
-        const numDryers = 12;
-        //populate machines with Washer
-        for (let i = 1; i < numWashers + 1 ; i++) {
-            machineList.push(new Washer(i));
-        }
-        for (let i = 1; i < numDryers + 1 ; i++) {
-            machineList.push(new Dryer(i));
-        }
-
-        //populate element array
-        for (let i = 0; i < machineList.length; i++) {
-            const name = machineList[i].type() + " " + machineList[i].getId().toString();
-            const color = new Date() < machineList[i].getTime() ? 'bg-red' : 'bg-grey-200';
-            setWasherCardElements((washerCardElements) => [...washerCardElements, renderCard(name, color, machineList[i].getTime())])
-        }
-    }, []);
+    // Create an array of card elements
+    const machineList = [];
+    const numWashers = 9;
+    const numDryers = 12;
+    //populate machines with Washer
+    for (let i = 1; i < numWashers + 1 ; i++) {
+        machineList.push(new Washer(i));
+    }
+    for (let i = 1; i < numDryers + 1 ; i++) {
+        machineList.push(new Dryer(i));
+    }
+    const washerCardElements = [];
+    //populate element array
+    for (let i = 0; i < machineList.length; i++) {
+        const name = machineList[i].type() + " " + machineList[i].getId().toString();
+        const color = new Date() < machineList[i].getTime() ? 'bg-red' : 'bg-grey-200';
+        washerCardElements.push(renderCard(name, color, machineList[i].getTime()))
+    }
 
     return (
-        <body className="bg-myTheme-base-100 min-h-screen">
-        {/* NavBar*/}
-        <div className="navbar bg-base-100">
-            <div className="navbar-start">
-                <div className="dropdown">
-                    <label tabIndex={0} className="btn btn-ghost btn-circle">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+        <main className="bg-base-100 min-h-screen">
+            {/* NavBar*/}
+            <div className="navbar neutral">
+                <div className="navbar-start">
+                    <div className="dropdown">
+                        <label tabIndex={0} className="btn btn-ghost btn-circle">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 6h16M4 12h16M4 18h7"
+                                />
+                            </svg>
+                        </label>
+                        <ul
+                            tabIndex={0}
+                            className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 6h16M4 12h16M4 18h7"
-                            />
-                        </svg>
-                    </label>
-                    <ul
-                        tabIndex={0}
-                        className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-                    >
-                        <li>
-                            <a>Homepage</a>
-                        </li>
-                        <li>
-                            <a>Portfolio</a>
-                        </li>
-                        <li>
-                            <a>About</a>
-                        </li>
-                    </ul>
+                            <li>
+                                <a>Homepage</a>
+                            </li>
+                            <li>
+                                <a>Portfolio</a>
+                            </li>
+                            <li>
+                                <a>About</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+                <div className="navbar-center">
+                    <a className="btn btn-ghost normal-case text-xl">Sid Laundry Room</a>
+                </div>
+                <div className="navbar-end"></div>
             </div>
-            <div className="navbar-center">
-                <a className="btn btn-ghost normal-case text-xl">Sid Laundry Room</a>
+
+            {/* Grid of machines*/}
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+
+                {washerCardElements}
+
             </div>
-            <div className="navbar-end"></div>
-        </div>
-
-        {/* Grid of machines*/}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-
-            {washerCardElements}
-
-        </div>
-        </body>
+        </main>
     );
 }
 
@@ -132,17 +127,15 @@ export async function getServerSideProps(ctx: any) {
     } = await supabase.auth.getSession()
 
 
-    /*
-    if (!session) {
-        return {
-            redirect: {
-                destination: `localhost:3000`,
-                permanent: false
-            }
-        }
-    }
+    // if (!session) {
+    //     return {
+    //         redirect: {
+    //             destination: `localhost:3000`,
+    //             permanent: false
+    //         }
+    //     }
+    // }
 
-     */
 
 
 

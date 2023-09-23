@@ -8,7 +8,7 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-function SignInWithGoogle() {
+function Login() {
     const navigate = useNavigate();
 
     supabase.auth.onAuthStateChange(async (event) => {
@@ -33,4 +33,4 @@ function SignInWithGoogle() {
     );
 }
 
-export default SignInWithGoogle;
+export default Login;
