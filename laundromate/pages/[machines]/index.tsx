@@ -5,7 +5,6 @@ import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {useRouter} from "next/router";
 import React, { useState, useEffect} from 'react';
-import {machine} from "os";
 
 // Initializes Washer & Dryer machines into a list
 const numWashers = 9;
@@ -24,9 +23,11 @@ export default function Home() {
     const supabaseClient = useSupabaseClient()
     const router = useRouter()
 
-    // State to track dropdown visibility
+    // Control States
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [showWashers, setShowWashers] = useState(true);
+    const [showToast, setShowToast] = useState(false);
+    const [gallonsUsed, setGallonsUsed] = useState(0);
 
     // Function to toggle the dropdown
     const toggleDropdown = () => {
@@ -34,6 +35,12 @@ export default function Home() {
     };
     const toggleWashersDryersView = () => {
         setShowWashers(!showWashers);
+    };
+    const showTimedToast = (duration: number | undefined) => {
+        setShowToast(true);
+        setTimeout(() => {
+            setShowToast(false);
+        }, duration);
     };
 
     // State tracking the time remaining & percentage remaining for each machine
@@ -44,7 +51,7 @@ export default function Home() {
     const handleAdd10Minutes = (machine: Machine) => {
         // Calculate a new end time by adding 10 minutes to the current end time
         const currentEndTime = machine.getTime();
-        const newEndTime = new Date(currentEndTime.getTime() + 60 * 1000);
+        const newEndTime = new Date(currentEndTime.getTime() + 10 * 60 * 1000);
 
         // Calculate the new time and percentage remaining
         const currentTime = new Date().getTime();
@@ -61,7 +68,12 @@ export default function Home() {
 
         machine.setTime(newEndTime);
 
-        //TODO: Change to 10 Mins
+        // For Toast
+        const timeRemaining = machine.getTime().getTime() - new Date().getTime();
+        const gallons = (timeRemaining / (10 * 60 * 1000)) * 4;
+        setGallonsUsed(gallons);
+        showTimedToast(5000);
+
     };
 
     // Reset button click
@@ -152,6 +164,7 @@ export default function Home() {
 
     return (
         <main className="bg-base-100 min-h-screen">
+
             {/* NavBar*/}
             <div className="flex justify-end ml-3 mt-3 mr-3">
                 <div className="navbar bg-neutral-focus rounded-box">
@@ -229,10 +242,22 @@ export default function Home() {
                     </div>
                 </div>
             </div>
+            <div className="toast">
+                <div className="alert alert-info">
+                    <span>New message arrived.</span>
+                </div>
+            </div>
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
                 {cardElements}
             </div>
-
+            {/* Toast message */}
+            {showToast && (
+                <div className="toast">
+                    <div className="alert alert-error">
+                        <span>You are using {gallonsUsed.toFixed(1)} Gallons</span>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
