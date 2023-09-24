@@ -5,6 +5,8 @@ import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
 import {useSupabaseClient} from "@supabase/auth-helpers-react";
 import {useRouter} from "next/router";
 import React, { useState, useEffect} from 'react';
+import {createSupabaseClient} from "@supabase/auth-helpers-shared";
+import {createClient} from "@supabase/supabase-js";
 
 // Initializes Washer & Dryer machines into a list
 const numWashers = 9;
@@ -18,9 +20,36 @@ for (let i = 1; i <= numDryers; i++) {
     dryerList.push(new Dryer(i));
 }
 
+async function getData(supabase) {
+    if (supabase != null) {
+        const {data, error} = await supabase
+            .from("machine_data")
+            .select()
+
+        if (error) {
+            throw error
+        }
+        return data
+    }
+    return null
+}
+
+
+
 export default function Home() {
-    // Handle login later
     const supabaseClient = useSupabaseClient()
+    const [data, setData] = useState([])
+    if (getData(supabaseClient) != null) {
+        useEffect(() => {
+            Promise.resolve(getData(supabaseClient)).then(value => {
+                for (var i = 0; i < value.length; i++) {
+                    setData((prevState) => [...prevState, value[i]])
+                }
+            })
+        }, []);
+    }
+
+
     const router = useRouter()
 
     // Control States
@@ -63,12 +92,12 @@ export default function Home() {
         const name = machine.type() + " " + machine.getId().toString();
         setMachineStates((prevState) => ({
             ...prevState,
-            [name]: { timeRemaining: remaining, percentageRemaining: percentage },
+            [name]: {timeRemaining: remaining, percentageRemaining: percentage},
         }));
 
         machine.setTime(newEndTime);
 
-        if(showWashers){
+        if (showWashers) {
             // For Toast
             const timeRemaining = machine.getTime().getTime() - new Date().getTime();
             const gallons = (timeRemaining / (10 * 60 * 1000)) * 4;
@@ -85,7 +114,7 @@ export default function Home() {
 
         setMachineStates((prevState) => ({
             ...prevState,
-            [name]: { timeRemaining: 0, percentageRemaining: 0 },
+            [name]: {timeRemaining: 0, percentageRemaining: 0},
         }));
 
         machine.setTime(new Date());
@@ -95,10 +124,10 @@ export default function Home() {
         // Initialize machineStates when the component mounts
         const initialMachineStates: Record<string, { timeRemaining: number, percentageRemaining: number }> = {};
         washerList.forEach((washer) => {
-            initialMachineStates[`Washer ${washer.getId()}`] = { timeRemaining: 0, percentageRemaining: 0 };
+            initialMachineStates[`Washer ${washer.getId()}`] = {timeRemaining: 0, percentageRemaining: 0};
         });
         dryerList.forEach((dryer) => {
-            initialMachineStates[`Dryer ${dryer.getId()}`] = { timeRemaining: 0, percentageRemaining: 0 };
+            initialMachineStates[`Dryer ${dryer.getId()}`] = {timeRemaining: 0, percentageRemaining: 0};
         });
         setMachineStates(initialMachineStates);
 
@@ -111,7 +140,7 @@ export default function Home() {
                 const finishTimeInMs = new Date(finishTime).getTime();
                 const remaining = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
                 const percentage = (remaining / 60) * 100;
-                updatedMachineStates[`Washer ${washer.getId()}`] = { timeRemaining: remaining, percentageRemaining: percentage };
+                updatedMachineStates[`Washer ${washer.getId()}`] = {timeRemaining: remaining, percentageRemaining: percentage};
             });
             dryerList.forEach((dryer) => {
                 const finishTime = dryer.getTime();
@@ -119,7 +148,7 @@ export default function Home() {
                 const finishTimeInMs = new Date(finishTime).getTime();
                 const remaining = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
                 const percentage = (remaining / 60) * 100;
-                updatedMachineStates[`Dryer ${dryer.getId()}`] = { timeRemaining: remaining, percentageRemaining: percentage };
+                updatedMachineStates[`Dryer ${dryer.getId()}`] = {timeRemaining: remaining, percentageRemaining: percentage};
             });
             setMachineStates(updatedMachineStates);
         }, 60 * 1000);
@@ -129,7 +158,7 @@ export default function Home() {
     }, []);
 
     // Function to render a single card
-    const renderCard = (m:Machine) => {
+    const renderCard = (m: Machine) => {
         const type = m.type();
         const name = type + " " + m.getId().toString();
         const color = new Date() < m.getTime() ? 'bg-error' : type === 'Washer' ? 'bg-info' : 'bg-white';
@@ -145,7 +174,7 @@ export default function Home() {
                         <div className="relative h-4 bg-gray-200 rounded">
                             <div
                                 className={`absolute left-0 h-4 bg-primary rounded ${percentageRemaining === 0 ? 'w-0' : ''}`}
-                                style={{ width: `${percentageRemaining}%` }}
+                                style={{width: `${percentageRemaining}%`}}
                             ></div>
                         </div>
                     </div>
@@ -233,7 +262,8 @@ export default function Home() {
                     <div className="navbar-end">
                         <div className="form-control">
                             <label className="label cursor-pointer">
-                                <span className=" btn btn-ghost normal-case text-xl"> {showWashers ? ' Washer' : 'Dryer'} </span>
+                                <span
+                                    className=" btn btn-ghost normal-case text-xl"> {showWashers ? ' Washer' : 'Dryer'} </span>
                                 <input
                                     type="checkbox"
                                     className="toggle"

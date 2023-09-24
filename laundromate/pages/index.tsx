@@ -36,7 +36,6 @@ export async function getServerSideProps(ctx:any) {
         data: { session },
     } = await supabase.auth.getSession()
 
-    console.log(session)
 
     if (session) {
         return {
