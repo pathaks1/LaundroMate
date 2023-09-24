@@ -19,7 +19,7 @@ export const handleLogin = async (
     const res = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-            redirectTo: "/machines",
+            redirectTo: getURL() + "machines",
         },
     })
 }
