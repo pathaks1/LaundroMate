@@ -3,6 +3,7 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import {useRouter} from "next/router";
 import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
+import LoginButton from "@/pages/LoginButton";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,28 +11,11 @@ const supabase = createClient(
 )
 
 function Login() {
-    const router = useRouter();
-
-    supabase.auth.onAuthStateChange(async (event) => {
-        if (event === "SIGNED_OUT") {
-            router.push("/machines")
-        }
-        else {
-            router.push("/");
-        }
-    })
-    return (
-        <div className="App">
-            <header className={"App-header"}>
-                <Auth
-                    supabaseClient={supabase}
-                    appearance={{theme: ThemeSupa}}
-                    theme="dark"
-                    providers={["google"]}
-                />
-            </header>
+    return(
+        <div>
+            <LoginButton />
         </div>
-    );
+    )
 }
 
 export default Login;
@@ -59,14 +43,14 @@ export async function getServerSideProps(ctx:any) {
     } = await supabase.auth.getSession()
 
 
-    // if (session) {
-    //     return {
-    //         redirect: {
-    //             destination: `localhost:3000/machines`,
-    //             permanent: false
-    //         }
-    //     }
-    // }
+    if (session) {
+        return {
+            redirect: {
+                destination: `localhost:3000/machines`,
+                permanent: false
+            }
+        }
+    }
 
 
 
