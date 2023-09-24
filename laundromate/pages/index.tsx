@@ -40,7 +40,7 @@ export async function getServerSideProps(ctx:any) {
     if (session) {
         return {
             redirect: {
-                destination: `/machines`,
+                destination: '/machines',
                 permanent: false
             }
         }
