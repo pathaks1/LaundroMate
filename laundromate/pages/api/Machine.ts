@@ -30,4 +30,7 @@ export class Machine {
     public setFalse() {
         this.inUse = false;
     }
+    public type() {
+        return "Machine"
+    }
 }
