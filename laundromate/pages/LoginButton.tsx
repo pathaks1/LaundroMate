@@ -5,16 +5,17 @@ import { createClient } from '@supabase/supabase-js';
 // useSupabaseClient was not working
 
 export default function LoginButton({ text = "Sign in with your Rice ID" }) {
-    const supabase = useSupabaseClient()
+    const supabase = useSupabaseClient();
+
     return (
         <button
-            className="btn btn-primary hover:shadow-lg hover:scale-110"
+            className="bg-secondary hover:bg-secondary-dark text-white font-bold py-2 px-4 rounded-box transform transition-transform hover:scale-105 focus:outline-none focus:ring focus:ring-opacity-50"
             onClick={(e) => {
-                e.preventDefault()
-                handleLogin(supabase)
+                e.preventDefault();
+                handleLogin(supabase);
             }}
         >
             {text}
         </button>
-    )
+    );
 }
