@@ -22,13 +22,13 @@ const config: Config = {
           "primary": {
             "khaki": "#C4AF9A"
           },
-          "secondary": "#447cff",
-          "accent": "#c5ef8b",
+          "secondary": "#2B2D42",
+          "accent": "#F1E0C5",
           "neutral": "#252230",
           "base-100": "#333144",
           "info": "#648ee8",
           "success": "#0d684a",
-          "warning": "#f9b848",
+          "warning": "#E88873",
           "error": "#e04262",
           "lightgrey": "#6b7280",
         },

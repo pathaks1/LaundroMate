@@ -2,6 +2,8 @@ import {Washer} from "@/pages/api/Washer";
 import {Dryer} from "@/pages/api/Dryer";
 import {Machine} from "@/pages/api/Machine";
 import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
+import {useSupabaseClient} from "@supabase/auth-helpers-react";
+import {useRouter} from "next/router";
 import React, { useState, useEffect} from 'react';
 import {machine} from "os";
 
@@ -18,6 +20,9 @@ for (let i = 1; i <= numDryers; i++) {
 }
 
 export default function Home() {
+    // Handle login later
+    const supabaseClient = useSupabaseClient()
+    const router = useRouter()
 
     // State to track dropdown visibility
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -197,13 +202,10 @@ export default function Home() {
                                     className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
                                 >
                                     <li>
-                                        <a>Homepage</a>
-                                    </li>
-                                    <li>
-                                        <a>Portfolio</a>
-                                    </li>
-                                    <li>
-                                        <a>About</a>
+                                        <a onClick={async () => {
+                                            await supabaseClient.auth.signOut()
+                                            router.push("/")
+                                        }}>Sign Out</a>
                                     </li>
                                 </ul>
                             )}

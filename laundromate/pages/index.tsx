@@ -3,6 +3,8 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import {useRouter} from "next/router";
 import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
+import LoginButton from "@/pages/LoginButton";
+import React from "react";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,47 +12,23 @@ const supabase = createClient(
 )
 
 function Login() {
-    const router = useRouter();
+    return(
+        <main className="bg-accent min-h-screen">
+            <div className="flex justify-center items-center h-screen">
+                <div className="bg-warning artboard phone-1 rounded-full relative flex flex-col items-center">
+                    <a className="btn btn-ghost normal-case text-6xl absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2">Laundro Mate</a>
+                    <div className="flex flex-grow justify-center items-center ">
+                        <LoginButton />
+                    </div>
+                </div>
+            </div>
+        </main>
 
-    supabase.auth.onAuthStateChange(async (event) => {
-        if (event === "SIGNED_OUT") {
-            router.push("/machines")
-        }
-        else {
-            router.push("/");
-        }
-    })
-    return (
-        <div className="App">
-            <header className={"App-header"}>
-                <Auth
-                    supabaseClient={supabase}
-                    appearance={{theme: ThemeSupa}}
-                    theme="dark"
-                    providers={["google"]}
-                />
-            </header>
-        </div>
-    );
+
+    )
 }
 
 export default Login;
-
-
-/*
-export default function MainLogin() {
-
-  return (
-      <Router>
-          <Routes>
-              <Route path="/" element={<Login />}/>
-              <Route path="/machines" element={<Home />} />
-          </Routes>
-      </Router>
-  );
-}
-
- */
 
 export async function getServerSideProps(ctx:any) {
     const supabase = createPagesServerClient(ctx)
@@ -59,14 +37,14 @@ export async function getServerSideProps(ctx:any) {
     } = await supabase.auth.getSession()
 
 
-    // if (session) {
-    //     return {
-    //         redirect: {
-    //             destination: `localhost:3000/machines`,
-    //             permanent: false
-    //         }
-    //     }
-    // }
+    if (session) {
+        return {
+            redirect: {
+                destination: `localhost:3000/machines`,
+                permanent: false
+            }
+        }
+    }
 
 
 
