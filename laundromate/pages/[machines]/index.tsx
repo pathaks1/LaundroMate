@@ -68,11 +68,14 @@ export default function Home() {
 
         machine.setTime(newEndTime);
 
-        // For Toast
-        const timeRemaining = machine.getTime().getTime() - new Date().getTime();
-        const gallons = (timeRemaining / (10 * 60 * 1000)) * 4;
-        setGallonsUsed(gallons);
-        showTimedToast(5000);
+        if(showWashers){
+            // For Toast
+            const timeRemaining = machine.getTime().getTime() - new Date().getTime();
+            const gallons = (timeRemaining / (10 * 60 * 1000)) * 4;
+            setGallonsUsed(gallons);
+            showTimedToast(5000);
+        }
+
 
     };
 
