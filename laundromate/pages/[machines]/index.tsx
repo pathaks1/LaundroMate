@@ -2,27 +2,123 @@ import {Washer} from "@/pages/api/Washer";
 import {Dryer} from "@/pages/api/Dryer";
 import {Machine} from "@/pages/api/Machine";
 import {createPagesServerClient} from "@supabase/auth-helpers-nextjs";
+import React, { useState, useEffect} from 'react';
 import {machine} from "os";
 
+// Initializes Washer & Dryer machines into a list
+const numWashers = 9;
+const numDryers = 12;
+const washerList: Washer[] = [];
+const dryerList: Dryer[] = [];
+for (let i = 1; i <= numWashers; i++) {
+    washerList.push(new Washer(i));
+}
+for (let i = 1; i <= numDryers; i++) {
+    dryerList.push(new Dryer(i));
+}
 
 export default function Home() {
 
-    // Define the number of cards, card names, and card colors
-    const numberOfCards = 9; // Change this to the desired number of cards
-    const cardColors = ['bg-info']; // Customize card colors
+    // State to track dropdown visibility
+    const [isDropdownOpen, setDropdownOpen] = useState(false);
+    const [showWashers, setShowWashers] = useState(true);
+
+    // Function to toggle the dropdown
+    const toggleDropdown = () => {
+        setDropdownOpen(!isDropdownOpen);
+    };
+    const toggleWashersDryersView = () => {
+        setShowWashers(!showWashers);
+    };
+
+    // State tracking the time remaining & percentage remaining for each machine
+    const [machineStates, setMachineStates] =
+        useState<Record<string, { timeRemaining: number, percentageRemaining: number }>>({});
+
+    // +10 Mins button click
+    const handleAdd10Minutes = (machine: Machine) => {
+        // Calculate a new end time by adding 10 minutes to the current end time
+        const currentEndTime = machine.getTime();
+        const newEndTime = new Date(currentEndTime.getTime() + 60 * 1000);
+
+        // Calculate the new time and percentage remaining
+        const currentTime = new Date().getTime();
+        const finishTimeInMs = new Date(newEndTime).getTime();
+        const remaining = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
+        const percentage = (remaining / 60) * 100;
+
+        // Update the state immediately
+        const name = machine.type() + " " + machine.getId().toString();
+        setMachineStates((prevState) => ({
+            ...prevState,
+            [name]: { timeRemaining: remaining, percentageRemaining: percentage },
+        }));
+
+        machine.setTime(newEndTime);
+
+        //TODO: Change to 10 Mins
+    };
+
+    // Reset button click
+    const handleReset = (machine: Machine) => {
+        const name = machine.type() + " " + machine.getId().toString();
+
+        setMachineStates((prevState) => ({
+            ...prevState,
+            [name]: { timeRemaining: 0, percentageRemaining: 0 },
+        }));
+
+        machine.setTime(new Date());
+    };
+
+    useEffect(() => {
+        // Initialize machineStates when the component mounts
+        const initialMachineStates: Record<string, { timeRemaining: number, percentageRemaining: number }> = {};
+        washerList.forEach((washer) => {
+            initialMachineStates[`Washer ${washer.getId()}`] = { timeRemaining: 0, percentageRemaining: 0 };
+        });
+        dryerList.forEach((dryer) => {
+            initialMachineStates[`Dryer ${dryer.getId()}`] = { timeRemaining: 0, percentageRemaining: 0 };
+        });
+        setMachineStates(initialMachineStates);
+
+        // Update machineStates periodically (every minute)
+        const interval = setInterval(() => {
+            const updatedMachineStates: Record<string, { timeRemaining: number, percentageRemaining: number }> = {};
+            washerList.forEach((washer) => {
+                const finishTime = washer.getTime();
+                const currentTime = new Date().getTime();
+                const finishTimeInMs = new Date(finishTime).getTime();
+                const remaining = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
+                const percentage = (remaining / 60) * 100;
+                updatedMachineStates[`Washer ${washer.getId()}`] = { timeRemaining: remaining, percentageRemaining: percentage };
+            });
+            dryerList.forEach((dryer) => {
+                const finishTime = dryer.getTime();
+                const currentTime = new Date().getTime();
+                const finishTimeInMs = new Date(finishTime).getTime();
+                const remaining = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
+                const percentage = (remaining / 60) * 100;
+                updatedMachineStates[`Dryer ${dryer.getId()}`] = { timeRemaining: remaining, percentageRemaining: percentage };
+            });
+            setMachineStates(updatedMachineStates);
+        }, 60 * 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
 
     // Function to render a single card
-    const renderCard = (name:string, color:string, finishTime:Date) => {
-        // Calculate the time remaining in minutes
-        const currentTime = new Date().getTime();
-        const finishTimeInMs = new Date(finishTime).getTime();
-        const timeRemainingInMinutes = Math.max(Math.ceil((finishTimeInMs - currentTime) / 60000), 0);
-
-        // Calculate the percentage of time remaining
-        const percentageRemaining = (timeRemainingInMinutes / 60) * 100;
+    const renderCard = (m:Machine) => {
+        const type = m.type();
+        const name = type + " " + m.getId().toString();
+        const color = new Date() < m.getTime() ? 'bg-error' : type === 'Washer' ? 'bg-info' : 'bg-white';
+        const fontcolor = type === 'Washer' ? 'text-white' : 'text-neutral';
+        const timeRemaining = machineStates[name]?.timeRemaining || 0;
+        const percentageRemaining = machineStates[name]?.percentageRemaining || 0;
 
         return (
-            <div key={name} className={`card md:w-30 ${color} text-primary-content ml-3 mr-3 mt-4`}>
+            <div key={name} className={`card md:w-30 ${color} ${fontcolor} ml-3 mr-3 mt-4`}>
                 <div className="card-body text-center">
                     <h2 className="text-center">{name}</h2>
                     <div className="mb-4">
@@ -33,13 +129,13 @@ export default function Home() {
                             ></div>
                         </div>
                     </div>
-                    <p>Time Remaining: {timeRemainingInMinutes} minutes</p>
+                    <p> Time Remaining: {timeRemaining} minutes </p>
                     <div className="card-actions justify-between">
                         <div className="card-actions content-start">
-                            <button className="btn">Reset</button>
+                            <button className="btn" onClick={() => handleReset(m)}>Reset</button>
                         </div>
                         <div className="card-actions content-end">
-                            <button className="btn">+10 Mins</button>
+                            <button className="btn" onClick={() => handleAdd10Minutes(m)}>+10 Mins</button>
                         </div>
                     </div>
                 </div>
@@ -47,75 +143,94 @@ export default function Home() {
         );
     };
 
-    // Create an array of card elements
-    const machineList = [];
-    const numWashers = 9;
-    const numDryers = 12;
-    //populate machines with Washer
-    for (let i = 1; i < numWashers + 1 ; i++) {
-        machineList.push(new Washer(i));
-    }
-    for (let i = 1; i < numDryers + 1 ; i++) {
-        machineList.push(new Dryer(i));
-    }
-    const washerCardElements = [];
-    //populate element array
-    for (let i = 0; i < machineList.length; i++) {
-        const name = machineList[i].type() + " " + machineList[i].getId().toString();
-        const color = new Date() < machineList[i].getTime() ? 'bg-red' : 'bg-grey-200';
-        washerCardElements.push(renderCard(name, color, machineList[i].getTime()))
-    }
+    const cardElements = showWashers ? washerList.map((machine) => renderCard(machine)) : dryerList.map((machine) => renderCard(machine));
 
     return (
         <main className="bg-base-100 min-h-screen">
             {/* NavBar*/}
-            <div className="navbar neutral">
-                <div className="navbar-start">
-                    <div className="dropdown">
-                        <label tabIndex={0} className="btn btn-ghost btn-circle">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+            <div className="flex justify-end ml-3 mt-3 mr-3">
+                <div className="navbar bg-neutral-focus rounded-box">
+                    <div className="navbar-start">
+                        <div className="dropdown">
+                            <label
+                                tabIndex={0}
+                                className="btn btn-ghost btn-circle"
+                                onClick={toggleDropdown} // Toggle dropdown visibility on click
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M4 6h16M4 12h16M4 18h7"
+                                {/* Add an arrow icon to indicate dropdown */}
+                                {isDropdownOpen ? (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 transform rotate-180"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 6h16M4 12h16M4 18h7"
+                                        />
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 6h16M4 12h16M4 18h7"
+                                        />
+                                    </svg>
+                                )}
+                            </label>
+                            {/* Conditional rendering for the dropdown */}
+                            {isDropdownOpen && (
+                                <ul
+                                    tabIndex={0}
+                                    className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+                                >
+                                    <li>
+                                        <a>Homepage</a>
+                                    </li>
+                                    <li>
+                                        <a>Portfolio</a>
+                                    </li>
+                                    <li>
+                                        <a>About</a>
+                                    </li>
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                    <div className="navbar-center">
+                        <a className="btn btn-ghost normal-case text-xl">Sid Laundry</a>
+                    </div>
+                    <div className="navbar-end">
+                        <div className="form-control">
+                            <label className="label cursor-pointer">
+                                <span className=" btn btn-ghost normal-case text-xl"> {showWashers ? ' Washer' : 'Dryer'} </span>
+                                <input
+                                    type="checkbox"
+                                    className="toggle"
+                                    checked={showWashers}
+                                    onChange={toggleWashersDryersView}
                                 />
-                            </svg>
-                        </label>
-                        <ul
-                            tabIndex={0}
-                            className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
-                        >
-                            <li>
-                                <a>Homepage</a>
-                            </li>
-                            <li>
-                                <a>Portfolio</a>
-                            </li>
-                            <li>
-                                <a>About</a>
-                            </li>
-                        </ul>
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div className="navbar-center">
-                    <a className="btn btn-ghost normal-case text-xl">Sid Laundry Room</a>
-                </div>
-                <div className="navbar-end"></div>
+            </div>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
+                {cardElements}
             </div>
 
-            {/* Grid of machines*/}
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-
-                {washerCardElements}
-
-            </div>
         </main>
     );
 }
