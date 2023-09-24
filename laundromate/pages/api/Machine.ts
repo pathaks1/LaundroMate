@@ -19,11 +19,18 @@ export class Machine {
         this.endTime.setTime(this.endTime.getTime() + 30*60*1000);
     }
 
+    public setTime(newTime: Date) {
+        this.endTime = newTime;
+    }
+
     public setTrue() {
         this.inUse = true;
     }
 
     public setFalse() {
         this.inUse = false;
+    }
+    public type() {
+        return "Machine"
     }
 }
