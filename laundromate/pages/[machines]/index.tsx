@@ -272,14 +272,14 @@ export async function getServerSideProps(ctx: any) {
     } = await supabase.auth.getSession()
 
 
-    // if (!session) {
-    //     return {
-    //         redirect: {
-    //             destination: `localhost:3000`,
-    //             permanent: false
-    //         }
-    //     }
-    // }
+    if (!session) {
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false
+            }
+        }
+    }
 
 
 
